@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1000 imagens • #1000imagesGrazi</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #000; /* fundo preto, mude se quiser */
+      overflow: hidden;
+    }
+
+    #curator-feed-default-feed-layout {
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Opcional: esconde o logo "Powered by Curator.io" */
+    .crt-logo.crt-tag {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Local onde o feed aparecerá -->
+  <div id="curator-feed-default-feed-layout">
+    <a href="https://curator.io" target="_blank" class="crt-logo crt-tag">Powered by Curator.io</a>
+  </div>
+
+  <!-- Script da sua wall do Curator.io -->
+  <script type="text/javascript">
+    (function(){
+      var i,e,d=document,s="script";
+      i=d.createElement("script");i.async=1;i.charset="UTF-8";
+      i.src="https://cdn.curator.io/published/c51806e2-9005-4437-96e3-d2e0ac93bc76.js";
+      e=d.getElementsByTagName(s)[0];
+      e.parentNode.insertBefore(i, e);
+    })();
+  </script>
+</body>
+</html>
