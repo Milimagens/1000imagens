@@ -3,12 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>Minha Social Wall Curator.io</title>
-  <!-- Temporary background color override; remove when no longer needed -->
-  <style>
-    body {
-      background-color: #ffd600;
-    }
-  </style>
 </head>
 <body>
 
@@ -31,7 +25,7 @@
   <script type="text/javascript">
     (function () {
       // Configurable scroll speed in pixels per second (increase for faster scrolling).
-      var SCROLL_SPEED_PX_PER_SEC = 1200;
+      var SCROLL_SPEED_PX_PER_SEC = 220;
       var TICK_MS = 20;
       var BUTTON_CHECK_INTERVAL_MS = 500;
       var LOAD_MORE_COOLDOWN_MS = 2000;
@@ -42,7 +36,7 @@
       var lastLoadClick = 0;
       var timerId = null;
       var EDGE_TOLERANCE_PX = 48;
-      var MAX_CYCLES_BEFORE_RELOAD = 3;
+      var MAX_CYCLES_BEFORE_RELOAD = 15;
 
       var cyclesCompleted = 0;
       var isReloading = false;
