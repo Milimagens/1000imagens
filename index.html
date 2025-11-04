@@ -22,5 +22,178 @@
     })();
   </script>
 
+  <script type="text/javascript">
+    (function () {
+      // Configurable scroll speed in pixels per second (increase for faster scrolling).
+      var SCROLL_SPEED_PX_PER_SEC = 1200;
+      var TICK_MS = 20;
+      var BUTTON_CHECK_INTERVAL_MS = 500;
+      var LOAD_MORE_COOLDOWN_MS = 2000;
+
+      var direction = 1; // 1 = down, -1 = up
+      var lastButtonCheck = 0;
+      var lastLoadClick = 0;
+      var timerId = null;
+
+      function clamp(value, min, max) {
+        return value < min ? min : value > max ? max : value;
+      }
+
+      function getScrollY() {
+        if (typeof window.scrollY === "number") {
+          return window.scrollY;
+        }
+        var docEl = document.documentElement || {};
+        var body = document.body || {};
+        return docEl.scrollTop || body.scrollTop || 0;
+      }
+
+      function setScrollY(value) {
+        window.scrollTo(0, value);
+      }
+
+      function getViewportHeight() {
+        return window.innerHeight || (document.documentElement || {}).clientHeight || 0;
+      }
+
+      function getScrollHeight() {
+        var docEl = document.documentElement || {};
+        var body = document.body || {};
+        return Math.max(docEl.scrollHeight || 0, body.scrollHeight || 0);
+      }
+
+      function isElementVisible(node) {
+        if (!node || !node.getBoundingClientRect) {
+          return false;
+        }
+        var rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      }
+
+      function normalizeText(value) {
+        if (!value) {
+          return "";
+        }
+        return String(value)
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+      }
+
+      function findLoadMoreButton() {
+        var selectors = ["button", "a", "[role='button']", ".crt-load-more"];
+        var targets = ["load more", "carregar mais", "ver mais"];
+
+        for (var s = 0; s < selectors.length; s++) {
+          var nodes = document.querySelectorAll(selectors[s]);
+          if (!nodes || !nodes.length) {
+            continue;
+          }
+
+          for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            if (!node || node.disabled) {
+              continue;
+            }
+
+            var text = normalizeText(node.innerText || node.textContent);
+            for (var t = 0; t < targets.length; t++) {
+              if (text === targets[t] && isElementVisible(node)) {
+                return node;
+              }
+            }
+          }
+        }
+        return null;
+      }
+
+      function simulateClick(node) {
+        if (!node) {
+          return;
+        }
+        if (typeof node.click === "function") {
+          node.click();
+          return;
+        }
+        try {
+          var evt = document.createEvent("MouseEvents");
+          evt.initMouseEvent(
+            "click",
+            true,
+            true,
+            window,
+            1,
+            0,
+            0,
+            0,
+            0,
+            false,
+            false,
+            false,
+            false,
+            0,
+            null
+          );
+          node.dispatchEvent(evt);
+        } catch (err) {
+          // Ignore if older browser lacks createEvent support.
+        }
+      }
+
+      function maybeClickLoadMore() {
+        var now = Date.now();
+        if (now - lastButtonCheck < BUTTON_CHECK_INTERVAL_MS) {
+          return;
+        }
+        lastButtonCheck = now;
+
+        if (now - lastLoadClick < LOAD_MORE_COOLDOWN_MS) {
+          return;
+        }
+
+        var button = findLoadMoreButton();
+        if (!button) {
+          return;
+        }
+
+        simulateClick(button);
+        lastLoadClick = now;
+      }
+
+      function step() {
+        var distancePerTick = (SCROLL_SPEED_PX_PER_SEC * TICK_MS) / 1000;
+        var currentY = getScrollY();
+        var viewportHeight = getViewportHeight();
+        var maxScrollY = Math.max(0, getScrollHeight() - viewportHeight);
+
+        if (direction > 0 && currentY >= maxScrollY) {
+          direction = -1;
+          return;
+        }
+
+        if (direction < 0 && currentY <= 0) {
+          direction = 1;
+          return;
+        }
+
+        var targetY = clamp(currentY + direction * distancePerTick, 0, maxScrollY);
+        setScrollY(targetY);
+        maybeClickLoadMore();
+      }
+
+      function start() {
+        if (timerId !== null) {
+          return;
+        }
+        timerId = setInterval(step, TICK_MS);
+      }
+
+      if (document.readyState === "complete") {
+        start();
+      } else {
+        window.addEventListener("load", start);
+      }
+    })();
+  </script>
 </body>
 </html>
