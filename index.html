@@ -6,7 +6,7 @@
   <!-- Temporary background color override; remove when no longer needed -->
   <style>
     body {
-      background-color: #0d4fb3;
+      background-color: #ff6f00;
     }
   </style>
 </head>
@@ -40,7 +40,7 @@
       var lastButtonCheck = 0;
       var lastLoadClick = 0;
       var timerId = null;
-      var EDGE_TOLERANCE_PX = 24;
+      var EDGE_TOLERANCE_PX = 48;
 
       function clamp(value, min, max) {
         return value < min ? min : value > max ? max : value;
@@ -56,7 +56,16 @@
       }
 
       function setScrollY(value) {
-        window.scrollTo(0, value);
+        var target = Math.max(0, Math.round(value));
+        try {
+          window.scrollTo(0, target);
+        } catch (err) {
+          // Ignore if scrollTo unavailable.
+        }
+        var docEl = document.documentElement || {};
+        var body = document.body || {};
+        docEl.scrollTop = target;
+        body.scrollTop = target;
       }
 
       function getViewportHeight() {
@@ -168,25 +177,28 @@
       }
 
       function step() {
+        maybeClickLoadMore();
+
         var distancePerTick = (SCROLL_SPEED_PX_PER_SEC * TICK_MS) / 1000;
         var currentY = getScrollY();
         var viewportHeight = getViewportHeight();
         var totalHeight = getScrollHeight();
         var maxScrollY = Math.max(0, totalHeight - viewportHeight);
+        var bottomReached = currentY + viewportHeight >= totalHeight - EDGE_TOLERANCE_PX;
+        var topReached = currentY <= EDGE_TOLERANCE_PX;
 
-        if (direction > 0 && currentY >= maxScrollY - EDGE_TOLERANCE_PX) {
+        if (direction > 0 && bottomReached) {
           direction = -1;
           return;
         }
 
-        if (direction < 0 && currentY <= EDGE_TOLERANCE_PX) {
+        if (direction < 0 && topReached) {
           direction = 1;
           return;
         }
 
         var targetY = clamp(currentY + direction * distancePerTick, 0, maxScrollY);
         setScrollY(targetY);
-        maybeClickLoadMore();
       }
 
       function start() {
