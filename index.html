@@ -6,7 +6,7 @@
   <!-- Temporary background color override; remove when no longer needed -->
   <style>
     body {
-      background-color: #1f8f2d;
+      background-color: #ffd600;
     }
   </style>
 </head>
@@ -35,6 +35,7 @@
       var TICK_MS = 20;
       var BUTTON_CHECK_INTERVAL_MS = 500;
       var LOAD_MORE_COOLDOWN_MS = 2000;
+      var BOTTOM_WAIT_MS = 2000;
 
       var direction = 1; // 1 = down, -1 = up
       var lastButtonCheck = 0;
@@ -45,6 +46,9 @@
 
       var cyclesCompleted = 0;
       var isReloading = false;
+      var isWaitingAtBottom = false;
+      var bottomWaitStart = 0;
+      var downCompleted = false;
 
       function clamp(value, min, max) {
         return value < min ? min : value > max ? max : value;
@@ -195,21 +199,57 @@
         var bottomReached = currentY + viewportHeight >= totalHeight - EDGE_TOLERANCE_PX;
         var topReached = currentY <= EDGE_TOLERANCE_PX;
 
-        if (direction > 0 && bottomReached) {
-          direction = -1;
-          return;
+        if (direction > 0) {
+          if (bottomReached) {
+            if (!isWaitingAtBottom) {
+              isWaitingAtBottom = true;
+              bottomWaitStart = Date.now();
+              downCompleted = false;
+            }
+
+            var waited = Date.now() - bottomWaitStart;
+            if (waited >= BOTTOM_WAIT_MS) {
+              isWaitingAtBottom = false;
+
+              var button = findLoadMoreButton();
+              var now = Date.now();
+
+              if (button && now - lastLoadClick >= LOAD_MORE_COOLDOWN_MS) {
+                simulateClick(button);
+                lastLoadClick = now;
+                direction = 1;
+                return;
+              }
+
+              if (!button) {
+                downCompleted = true;
+                direction = -1;
+                return;
+              }
+
+              isWaitingAtBottom = true;
+              bottomWaitStart = Date.now();
+            }
+            return;
+          }
+
+          isWaitingAtBottom = false;
+          downCompleted = false;
         }
 
         if (direction < 0 && topReached) {
-          cyclesCompleted += 1;
-          if (cyclesCompleted >= MAX_CYCLES_BEFORE_RELOAD) {
-            isReloading = true;
-            try {
-              window.location.reload();
-            } catch (err) {
-              // Ignore reload errors on older browsers.
+          if (downCompleted) {
+            downCompleted = false;
+            cyclesCompleted += 1;
+            if (cyclesCompleted >= MAX_CYCLES_BEFORE_RELOAD) {
+              isReloading = true;
+              try {
+                window.location.reload();
+              } catch (err) {
+                // Ignore reload errors on older browsers.
+              }
+              return;
             }
-            return;
           }
           direction = 1;
           return;
