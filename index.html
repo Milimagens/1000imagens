@@ -6,7 +6,7 @@
   <!-- Temporary background color override; remove when no longer needed -->
   <style>
     body {
-      background-color: #ff6f00;
+      background-color: #1f8f2d;
     }
   </style>
 </head>
@@ -41,6 +41,10 @@
       var lastLoadClick = 0;
       var timerId = null;
       var EDGE_TOLERANCE_PX = 48;
+      var MAX_CYCLES_BEFORE_RELOAD = 3;
+
+      var cyclesCompleted = 0;
+      var isReloading = false;
 
       function clamp(value, min, max) {
         return value < min ? min : value > max ? max : value;
@@ -177,6 +181,10 @@
       }
 
       function step() {
+        if (isReloading) {
+          return;
+        }
+
         maybeClickLoadMore();
 
         var distancePerTick = (SCROLL_SPEED_PX_PER_SEC * TICK_MS) / 1000;
@@ -193,6 +201,16 @@
         }
 
         if (direction < 0 && topReached) {
+          cyclesCompleted += 1;
+          if (cyclesCompleted >= MAX_CYCLES_BEFORE_RELOAD) {
+            isReloading = true;
+            try {
+              window.location.reload();
+            } catch (err) {
+              // Ignore reload errors on older browsers.
+            }
+            return;
+          }
           direction = 1;
           return;
         }
